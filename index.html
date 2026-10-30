@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>弹簧计算器 · 压簧 / 拉簧 / 反推设计</title>
+<meta name="theme-color" content="#0e1116">
+<meta name="description" content="输入尺寸自动算圈数、螺距、刚度、行程力和应力；也能按安装空间反推可行方案。">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="t-comp mode-n">
+
+<header class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"></span>
+    <div class="brand-txt">
+      <h1>弹簧计算器</h1>
+      <p class="sub">压簧 / 拉簧 / 反推设计</p>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="弹簧类型">
+    <button class="tab is-on" data-type="comp" role="tab">压簧</button>
+    <button class="tab" data-type="ext" role="tab">拉簧</button>
+    <button class="tab" data-type="rev" role="tab">反推</button>
+  </nav>
+</header>
+
+<main class="layout">
+
+  <!-- ============ 左：输入 ============ -->
+  <section class="card">
+    <h2 class="card-title">输入参数</h2>
+
+    <div class="for-comp for-ext">
+      <div class="fields">
+        <label class="f"><span>线径 d</span><input id="d" type="number" inputmode="decimal" step="0.05" min="0.1" value="1.2"><i>mm</i></label>
+        <label class="f"><span>外径 D</span><input id="D" type="number" inputmode="decimal" step="0.1" min="0.3" value="12"><i>mm</i></label>
+      </div>
+    </div>
+
+    <div class="for-comp">
+      <div class="fields">
+        <label class="f"><span>自由长度 L0</span><input id="L0" type="number" inputmode="decimal" step="0.5" min="1" value="50"><i>mm</i></label>
+      </div>
+    </div>
+
+    <div class="for-ext">
+      <div class="fields">
+        <label class="f"><span>本体长度 Lb</span><input id="Lb" type="number" inputmode="decimal" step="0.5" min="1" value="40"><i>mm</i></label>
+      </div>
+    </div>
+
+    <div class="for-rev">
+      <p class="hint">先说你手上有什么：能装弹簧的空间多大、要多大劲。</p>
+      <div class="seg" id="revSeg" role="tablist" aria-label="反推哪种弹簧">
+        <button class="rev-btn is-on" data-rev="comp" role="tab">反推压簧</button>
+        <button class="rev-btn" data-rev="ext" role="tab">反推拉簧</button>
+      </div>
+      <div class="fields">
+        <label class="f"><span>空间内径 Dmax</span><input id="Dmax" type="number" inputmode="decimal" step="0.5" min="1" value="20"><i>mm</i></label>
+        <label class="f rv-comp"><span>空间高度 L0max</span><input id="L0max" type="number" inputmode="decimal" step="1" min="2" value="60"><i>mm</i></label>
+        <label class="f rv-ext"><span>本体长度上限 Lbmax</span><input id="Lbmax" type="number" inputmode="decimal" step="1" min="3" value="60"><i>mm</i></label>
+      </div>
+      <div class="fields rv-ext">
+        <label class="f"><span>初拉力 F0</span><input id="F0r" type="number" inputmode="decimal" step="0.1" min="0" value="0"><i>N</i></label>
+      </div>
+    </div>
+
+    <div class="for-comp">
+      <div class="seg" id="modeSeg" role="tablist" aria-label="求解方式">
+        <button class="seg-btn is-on" data-mode="n" role="tab">已知圈数</button>
+        <button class="seg-btn" data-mode="k" role="tab">已知刚度</button>
+      </div>
+      <div class="fields">
+        <label class="f only-n"><span>有效圈数 n</span><input id="nIn" type="number" inputmode="decimal" step="0.5" min="0.5" value="8"><i>圈</i></label>
+        <label class="f only-k"><span>目标刚度 k</span><input id="kIn" type="number" inputmode="decimal" step="0.01" min="0.001" value="2"><i>N/mm</i></label>
+      </div>
+    </div>
+
+    <div class="for-comp for-ext">
+      <div class="fields">
+        <label class="f"><span>工作行程 f</span><input id="travel" type="number" inputmode="decimal" step="0.5" min="0" value="10"><i>mm</i></label>
+      </div>
+    </div>
+
+    <div class="for-ext">
+      <div class="fields">
+        <label class="f"><span>初拉力 F0</span><input id="F0" type="number" inputmode="decimal" step="0.1" min="0" value="0"><i>N</i></label>
+      </div>
+      <p class="hint">初拉力只能靠实测：拿成品在拉力机上拉到弹簧刚好分离时读数。</p>
+    </div>
+
+    <div class="for-rev">
+      <div class="fields">
+        <label class="f"><span>工作行程 f</span><input id="travelR" type="number" inputmode="decimal" step="0.5" min="0.1" value="10"><i>mm</i></label>
+        <label class="f"><span>目标刚度 k</span><input id="kTar" type="number" inputmode="decimal" step="0.01" min="0.001" value="2"><i>N/mm</i></label>
+      </div>
+      <div class="fields">
+        <label class="f wide"><span>或者：行程 f 时要有多少力（留空则用上面的刚度）</span><input id="Fwant" type="number" inputmode="decimal" step="0.1" min="0" placeholder="比如 20"><i>N</i></label>
+      </div>
+    </div>
+
+    <div class="fields">
+      <label class="f f-sel"><span>材料</span>
+        <select id="G">
+          <option value="79000">碳素弹簧钢 / 琴钢丝</option>
+          <option value="73000">不锈钢丝 0Cr17Ni7</option>
+          <option value="40000">黄铜 / 磷青铜</option>
+        </select>
+      </label>
+      <label class="f"><span>许用切应力 τ</span><input id="tauAllow" type="number" inputmode="decimal" step="10" min="0" value="700"><i>MPa</i></label>
+    </div>
+    <p class="hint" id="modeNote"></p>
+  </section>
+
+  <!-- ============ 右：结果 ============ -->
+  <section class="card results">
+    <div class="res-head">
+      <h2 class="card-title" id="resTitle">计算结果</h2>
+      <div class="actions">
+        <button class="btn" id="btnCopy" type="button">复制</button>
+        <button class="btn" id="btnCsv" type="button">导出 CSV</button>
+        <button class="btn" id="btnPrint" type="button">打印 / 存 PDF</button>
+      </div>
+    </div>
+
+    <div class="res-single for-comp for-ext">
+      <div class="hero">
+        <div class="hero-l">
+          <b id="rK">—</b>
+          <span class="u">N/mm</span>
+        </div>
+        <div class="hero-r">
+          <em>刚度 k</em>
+          <small id="rNote"></small>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat accent"><i id="lN">圈数 n</i><b id="rN">—</b></div>
+        <div class="stat"><i id="lT">螺距 t</i><b id="rT">—</b></div>
+        <div class="stat"><i id="lC">弹簧指数 C</i><b id="rC">—</b></div>
+        <div class="stat"><i id="lDm">中径 Dm</i><b id="rDm">—</b></div>
+        <div class="stat"><i id="lLs">压并高度 Ls</i><b id="rLs">—</b></div>
+        <div class="stat"><i id="lFmax">可用行程</i><b id="rFmax">—</b></div>
+      </div>
+
+      <div class="force">
+        <div class="fbox"><i>行程 <span id="rTravel">—</span> mm 时的力</i><b id="rForce">—</b><span class="u">N</span></div>
+        <div class="fbox"><i>工作切应力 τ</i><b id="rTau">—</b><span class="u">MPa</span></div>
+        <div class="fbox"><i>应力利用率</i><b id="rUtil">—</b><span class="u">%</span></div>
+      </div>
+
+      <h3 class="sec-title">力 — 行程</h3>
+      <div class="chart-wrap"><svg id="chart" viewBox="0 0 340 190" role="img" aria-label="力与行程的线性关系图"></svg></div>
+
+      <h3 class="sec-title">行程对照表</h3>
+      <div class="table-scroll">
+        <table class="tbl">
+          <thead><tr><th>行程 (mm)</th><th>力 (N)</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <h3 class="sec-title">校核</h3>
+      <ul class="checks" id="checks"></ul>
+    </div>
+
+    <div class="res-rev for-rev">
+      <p class="hint" id="revInfo">填好空间高度、内径和要的力，下面会出现一批能做的方案。</p>
+      <div class="table-scroll">
+        <table class="tbl rev">
+          <thead><tr>
+            <th>线径 d</th><th>外径 D</th><th>圈数 n</th><th id="thT">螺距 t</th><th id="thLen">自由长 L0</th>
+            <th>刚度 k</th><th>行程力 F</th><th>应力 τ</th><th>利用率</th><th></th>
+          </tr></thead>
+          <tbody id="revBody"></tbody>
+        </table>
+      </div>
+      <ul class="checks" id="revChecks"></ul>
+    </div>
+
+    <details class="formulas">
+      <summary>公式与名词</summary>
+      <div class="fx">
+        <p><b>刚度</b>　k = G·d⁴ / (8·Dm³·n)　—— 线径是四次方：细一点点，立刻软很多</p>
+        <p><b>应力</b>　τ = K·8·F·Dm / (π·d³)　　K = (4C−1)/(4C−4) + 0.615/C</p>
+        <p><b>压簧</b>　t = (L0 − 2d)/n　　Ls = (n+2)·d</p>
+        <p><b>拉簧</b>　n = round(Lb/d)　　t = d</p>
+        <hr>
+        <p><b>弹簧指数 C = 中径 ÷ 线径</b>：弹簧的"胖瘦"。C 太小（&lt;4）丝太粗、卷不动，内侧应力尖；C 太大（&gt;16）太软发晃。5–10 最好做。</p>
+        <p><b>许用切应力</b>：钢丝能承受的应力上限，超了就永久变形或者断。它 = 材料强度 ÷ 安全系数，随牌号、丝径、静载还是几百万次疲劳而变，所以必须按实际工况填，别照抄默认值。</p>
+      </div>
+    </details>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<footer class="foot">
+  单位一律 mm / N / MPa。小变形线性假设，两端并紧磨平。
+</footer>
+
+<script src="spring-math.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "弹簧计算器",
+  "short_name": "弹簧计算",
+  "description": "压簧 / 拉簧的圈数、螺距、刚度、力计算器。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1216",
+  "theme_color": "#0f1216",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
