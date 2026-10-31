@@ -81,10 +81,14 @@ body {
 }
 .card-title { margin: 0 0 12px; font-size: 13px; letter-spacing: 1.4px; color: var(--dim); font-weight: 700; text-transform: uppercase; }
 
-/* ---------- 显隐 ---------- */
-body.t-ext .for-comp, body.t-rev .for-comp { display: none; }
-body.t-comp .for-ext, body.t-rev .for-ext { display: none; }
+/* ---------- 显隐 ----------
+   注意：有些区块同时属于两类（例如"线径/外径"压簧和拉簧都要用），
+   所以这里必须排除掉"也带另一个类"的元素，否则共用区块会在两边都被藏起来。 */
+body.t-ext .for-comp:not(.for-ext), body.t-rev .for-comp:not(.for-ext) { display: none; }
+body.t-comp .for-ext:not(.for-comp), body.t-rev .for-ext:not(.for-comp) { display: none; }
 body.t-comp .for-rev, body.t-ext .for-rev { display: none; }
+/* 反推页用的东西和别人都不一样，压簧/拉簧的共用区块在反推页一律收起来 */
+body.t-rev .for-comp, body.t-rev .for-ext { display: none; }
 body:not(.mode-k) .only-k { display: none; }
 body.mode-k .only-n { display: none; }
 body.mode-k #lN .k-hide { display: none; }
@@ -93,8 +97,12 @@ body.rv-ext .rv-comp { display: none; }
 body:not(.rv-ext) .rv-ext { display: none; }
 
 /* ---------- 输入 ---------- */
-.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+/* minmax(0,1fr) 而不是 1fr：不然内容长的输入框会把整列撑破、顶出卡片 */
+.fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; margin-bottom: 10px; }
+.fields > * { min-width: 0; }
 .fields .wide { grid-column: 1 / -1; }
+/* 一行里只有一个输入框时，让它独占整行，别留个空洞 */
+.fields > :only-child { grid-column: 1 / -1; }
 
 .f {
   display: flex; align-items: center; gap: 6px;
@@ -291,6 +299,18 @@ input[type=number] { -moz-appearance: textfield; }
   .force { grid-template-columns: 1fr; }
   .fbox b { font-size: 19px; }
   .f input { width: 70px; }
+}
+
+/* 更窄的手机：材料那个下拉框字太长，让它自己占一行，别把"许用切应力"挤到卡片外面 */
+@media (max-width: 560px) {
+  .fields { gap: 8px; }
+  .fields:has(select) { grid-template-columns: 1fr; }
+  .f { padding: 6px 9px; }
+  .f > span { font-size: 12px; }
+  .f input { width: 64px; font-size: 14px; }
+  .f select { font-size: 14px; }
+  .card { padding: 14px; }
+  .brand-txt h1 { font-size: 17px; }
 }
 
 /* ---------- 打印 / 存 PDF ---------- */

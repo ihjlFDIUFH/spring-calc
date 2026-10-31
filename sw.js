@@ -1,5 +1,5 @@
 /* Service Worker：装到桌面后可以离线打开。改了文件就把 VERSION 加一。 */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = 'springcalc-' + VERSION;
 const FILES = ['./', './index.html', './style.css', './app.js', './spring-math.js',
                './manifest.webmanifest', './icon-192.png', './icon-512.png'];
