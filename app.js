@@ -41,6 +41,18 @@
     for (var k in m) if (Object.prototype.hasOwnProperty.call(m, k)) MAT_BY_G[m[k].G] = m[k].name;
   })();
 
+  /* 材料名以"下拉框里选中的那一项"为准。
+     因为 60Si2Mn 和 55CrSi 的 G 一样（都是 78500），光靠 G 反查会认错材料。 */
+  function matName() {
+    var sel = $('G');
+    try {
+      if (sel && sel.options && sel.selectedIndex >= 0 && sel.options[sel.selectedIndex]) {
+        return sel.options[sel.selectedIndex].text;
+      }
+    } catch (e) { /* 假 DOM 下没有 options，走下面的兜底 */ }
+    return MAT_BY_G[num('G', 79000)] || '自定义材料';
+  }
+
   /* ---------- 切换 ---------- */
   function setType(t) {
     state.type = t;
@@ -146,7 +158,7 @@
     var isExt = o.type === 'ext';
 
     set('rK', sig(o.k, 4));
-    set('rNote', (MAT_BY_G[o.G] || '自定义材料') + ' · G=' + o.G);
+    set('rNote', matName() + ' · G=' + o.G);
     set('rN', sig(o.n, 3));
     set('rC', o.C.toFixed(2));
     set('rDm', o.Dm.toFixed(2));
@@ -435,6 +447,20 @@
       (function (el) {
         el.addEventListener('click', function () { setRevType(el.getAttribute('data-rev')); });
       })(revs[r]);
+    }
+
+    /* 换材料：顺手把许用切应力填成该材料的参考值（之后可以自己改） */
+    if ($('G')) {
+      $('G').addEventListener('change', function () {
+        var sel = $('G');
+        var opt = null;
+        try { opt = sel.options ? sel.options[sel.selectedIndex] : null; } catch (e) { opt = null; }
+        var allow = opt ? parseFloat(opt.getAttribute('data-allow')) : NaN;
+        if (isFinite(allow) && allow > 0 && $('tauAllow')) {
+          $('tauAllow').value = allow;
+          toast('已填入' + opt.text + '的参考许用切应力 ' + allow + ' MPa');
+        }
+      });
     }
 
     var inputs = document.querySelectorAll('input, select');

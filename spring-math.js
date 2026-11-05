@@ -10,11 +10,15 @@
   'use strict';
 
   /* 常见材料的切变模量 G（MPa）。
-     G 越大，弹簧越"硬"。数值随牌号/热处理变化，这里给常用参考值。 */
+     G 越大，弹簧越"硬"。数值随牌号/热处理变化，这里给常用参考值。
+     allow 是这个材料常见的许用切应力参考值（静载、常温、有良好热处理），
+     实际要按 σb 和你的安全系数算，只能当起点。 */
   const MATERIALS = {
-    carbon:    { name: '碳素弹簧钢 / 琴钢丝', G: 79000 },
-    stainless: { name: '不锈钢丝 0Cr17Ni7',    G: 73000 },
-    brass:     { name: '黄铜 / 磷青铜',        G: 40000 }
+    carbon:    { name: '碳素弹簧钢 / 琴钢丝', G: 79000, allow: 700 },
+    si2mn:     { name: '60Si2Mn（60硅2锰）', G: 78500, allow: 750 },
+    crsi:      { name: '55CrSi（55铬硅）',   G: 78500, allow: 800 },
+    stainless: { name: '不锈钢丝 0Cr17Ni7',  G: 73000, allow: 450 },
+    brass:     { name: '黄铜 / 磷青铜',      G: 40000, allow: 200 }
   };
 
   /* 曲度系数（Wahl 系数）：钢丝内侧应力比平均值高，用 K 修正。
