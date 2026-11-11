@@ -66,15 +66,19 @@
       n = Math.max(0.5, roundHalf(nRaw));
       k = stiffness(G, d, Dm, n);
     } else {
-      if (!(o.n > 0)) return { ok: false, errors: ['请填写有效圈数 n'] };
+      if (!(o.n > 0)) return { ok: false, errors: ['有效圈数 = 总圈数 − 支撑圈，必须大于 0（总圈数要比支撑圈多）'] };
       n = o.n;
       k = stiffness(G, d, Dm, n);
     }
 
-    /* 两端并紧磨平：自由高度 L0 = n·t + 2d，压并高度 Ls = (n+2)·d
-       → 螺距 t = (L0 - 2d) / n */
-    const t = (L0 - 2 * d) / n;
-    const Ls = (n + 2) * d;
+    /* 支撑圈 support：两端并紧时，每端 1 圈只是"垫着"，不参与变形。
+       总圈数 N = 有效圈数 n + support。
+       自由高度 L0 = n·t + support·d，压并高度 Ls = (n + support)·d
+       → 螺距 t = (L0 - support·d) / n */
+    const support = (typeof o.support === 'number' && isFinite(o.support) && o.support >= 0) ? o.support : 2;
+    const nTotal = n + support;
+    const t = (L0 - support * d) / n;
+    const Ls = (n + support) * d;
     const fMax = L0 - Ls;               // 压到并死前还能走多少行程
     const travel = Math.min(Math.max(o.travel || 0, 0), Math.max(fMax, 0));
     const F = k * travel;
@@ -83,6 +87,13 @@
 
     const checks = [];
     checks.push(indexCheck(C));
+
+    if (support > 0) {
+      checks.push({
+        level: 'ok',
+        text: '总圈数 ' + nTotal + ' − 支撑圈 ' + support + ' = 有效圈数 ' + n + '，真正受力变形的只有这 ' + n + ' 圈'
+      });
+    }
 
     if (t <= d) {
       checks.push({ level: 'err', text: '螺距 t ≤ 线径 d：圈与圈已经压死，自由长度不够或圈数太多' });
@@ -114,7 +125,8 @@
       ok: true, errors: [], checks,
       out: {
         type: 'comp', d, D, Dm, L0, G, C, K: wahlFactor(C),
-        n, nRaw: o.mode === 'k' ? (G * Math.pow(d, 4)) / (8 * Math.pow(Dm, 3) * o.kTarget) : n,
+        n, nTotal, support,
+        nRaw: o.mode === 'k' ? (G * Math.pow(d, 4)) / (8 * Math.pow(Dm, 3) * o.kTarget) : n,
         t, Ls, L0, fMax, travel, k,
         forceAtTravel: F, tau, tauMax,
         table: buildTable(fMax, k, 0),
@@ -160,7 +172,16 @@
     if (F0 > 0) {
       checks.push({ level: 'ok', text: '初拉力 ' + F0 + ' N 对应初始切应力 τ₀ ≈ ' + tau0.toFixed(0) + ' MPa' });
     } else {
-      checks.push({ level: 'warn', text: '初拉力填了 0：算出来的是"纯弹簧力"。实际冷卷拉簧通常有初拉力，建议实测或问供应商' });
+      /* 初拉力没有几何公式：它来自钢丝被强行卷紧后残留的压紧力，
+         同一台卷簧机换个调机参数就不一样，所以只能量。
+         但可以按卷制残余应力给个量级：F0 = π·d³·τ₀ / (8·Dm) */
+      const est = [30, 60, 90].map(function (t0) {
+        return (Math.PI * Math.pow(d, 3) * t0 / (8 * Dm)).toFixed(1);
+      });
+      checks.push({
+        level: 'warn',
+        text: '初拉力填了 0：算出来的是"纯弹簧力"。冷卷拉簧一般都有初拉力 —— 按卷制残余应力 30 / 60 / 90 MPa 估，这根的 F0 大概在 ' + est.join(' / ') + ' N 之间，准确值只能实测'
+      });
     }
     if (o.tauAllow > 0) {
       const u = tau / o.tauAllow;

@@ -114,10 +114,13 @@
     var travel = num('travel', 0);
 
     if (state.type === 'comp') {
+      /* 界面上填的是总圈数，公式要的是有效圈数：两端并紧的那 1~2 圈不参与变形 */
+      var support = num('support', 2);
+      var nFair = state.mode === 'n' ? num('nIn', 0) - support : 0;
       return M.compression({
         d: readNum('d'), D: readNum('D'), L0: readNum('L0'), G: G,
-        mode: state.mode, n: readNum('nIn'), kTarget: readNum('kIn'),
-        travel: travel, tauAllow: tauAllow
+        mode: state.mode, n: nFair, kTarget: readNum('kIn'),
+        support: support, travel: travel, tauAllow: tauAllow
       });
     }
 
@@ -174,7 +177,7 @@
       set('lT', '螺距 t');
       set('rT', sig(o.t, 3));
       set('lLs', '压并高度 Ls');
-      set('rLs', sig((o.n + 2) * o.d, 3));
+      set('rLs', sig(o.Ls, 3));
       set('lFmax', '可用行程');
       set('rFmax', sig(o.fMax, 3));
     }
@@ -300,7 +303,9 @@
       setType('ext');
     } else {
       if ($('L0')) $('L0').value = r.L0.toFixed(1);
-      if ($('nIn')) $('nIn').value = String(r.n);
+      /* 反推得到的是有效圈数，填回界面要加回支撑圈变成总圈数 */
+      var sp = num('support', 2);
+      if ($('nIn')) $('nIn').value = String(Math.round((r.n + sp) * 2) / 2);
       setMode('n');
       setType('comp');
     }
@@ -368,8 +373,9 @@
     rows.push(['中径 Dm', o.Dm.toFixed(2), 'mm']);
     rows.push(['有效圈数 n', o.n, '圈']);
     if (!isExt) {
+      rows.push(['总圈数 N（含支撑圈 ' + o.support + '）', o.nTotal, '圈']);
       rows.push(['螺距 t', o.t.toFixed(2), 'mm']);
-      rows.push(['压并高度 Ls', ((o.n + 2) * o.d).toFixed(2), 'mm']);
+      rows.push(['压并高度 Ls', o.Ls.toFixed(2), 'mm']);
       rows.push(['可用行程', o.fMax.toFixed(2), 'mm']);
     } else {
       rows.push(['允许伸长', o.fAllow.toFixed(2), 'mm']);

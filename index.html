@@ -75,9 +75,19 @@
         <button class="seg-btn" data-mode="k" role="tab">已知刚度</button>
       </div>
       <div class="fields">
-        <label class="f only-n"><span>有效圈数 n</span><input id="nIn" type="number" inputmode="decimal" step="0.5" min="0.5" value="8"><i>圈</i></label>
+        <label class="f only-n"><span>总圈数 N</span><input id="nIn" type="number" inputmode="decimal" step="0.5" min="1" value="10"><i>圈</i></label>
         <label class="f only-k"><span>目标刚度 k</span><input id="kIn" type="number" inputmode="decimal" step="0.01" min="0.001" value="2"><i>N/mm</i></label>
+        <label class="f f-sel"><span>支撑圈</span>
+          <select id="support">
+            <option value="2" selected>2 圈（两端并紧磨平）</option>
+            <option value="2.5">2.5 圈（两端并紧不磨平）</option>
+            <option value="1.5">1.5 圈</option>
+            <option value="1">1 圈</option>
+            <option value="0">0 圈（两端不并紧）</option>
+          </select>
+        </label>
       </div>
+      <p class="hint">数圈数时数到的是<b>总圈数</b>。两端压紧的那 1~2 圈只是垫着的，不参与变形：有效圈数 = 总圈数 − 支撑圈。</p>
     </div>
 
     <div class="for-comp for-ext">
